@@ -18,7 +18,7 @@ class RobotArm(object):
     # ---------------------------------------------------------------------------
     # The default config that the program will use if no config is given
     DEFAULT_CONFIG = {COLOR_SENSOR: "in3", BOTTOM_TOUCH_SENSOR: "in1",
-                      TURNING_MOTOR: "outC", VERTICAL_MOVE_MOTOR: "outB", HAND: "outA"}
+                      TURNING_MOTOR: "outC", VERTICAL_MOVE_MOTOR: "outB", HAND: "outA", GYRO_SENSOR: "in2"}
 
     # ---------------------------------------------------------------------------
 
@@ -88,13 +88,13 @@ class RobotArm(object):
 
     def setHeading(self):
         """Set the heading of the robot to the current direction"""
-        if self.gyroSensor is not None:
-            self.gyroSensor.mode = "GYRO-CAL"
+        if self.gyro_sensor is not None:
+            self.gyro_sensor.mode = "GYRO-CAL"
             time.sleep(0.2)
-            self.gyroSensor.mode = "GYRO-ANG"
-            self.gyroSensor.mode = "GYRO-CAL"
+            self.gyro_sensor.mode = "GYRO-ANG"
+            self.gyro_sensor.mode = "GYRO-CAL"
             time.sleep(0.2)
-            self.gyroSensor.mode = "GYRO-ANG"
+            self.gyro_sensor.mode = "GYRO-ANG"
         else:
             print("Cannot find gyro sensor")
 
@@ -103,14 +103,14 @@ class RobotArm(object):
         last time setHeading is called
         The heading is to the right side of the origin
         """
-        if self.gyroSensor is not None:
-            angle = self.gyroSensor.angle
+        if self.gyro_sensor is not None:
+            angle = self.gyro_sensor.angle
             if angle < 0:
-                # With the current design, the right direction will be negative result
-                return abs(self.gyroSensor.angle) % 360
+                # With the current design, the left direction will be negative result
+                return 360 - abs(angle) % 360
             else:
-                # If the angle is positive, that means the robot has turned left
-                return (360 - angle % 360) % 360
+                # If the angle is positive, that means the robot has turned right
+                return angle % 360
 
         else:
             print("Cannot find gyro sensor")
@@ -134,6 +134,7 @@ class RobotArm(object):
         else:
             # Time is in seconds, so convert it to miliseconds
             self.vertical_move_motor.run_timed(time_sp=time * 1000)
+        self.vertical_move_motor.wait_until_not_moving()
 
     def moveDown(self, speed, time=None):
         """Method to move the arm down with speed from 0 to 1. If there is no given
@@ -143,8 +144,36 @@ class RobotArm(object):
         self.moveUp(speed=-speed, time=time)
 
     def armRelease(self):
-        """Method to releast the arm from holding its position to coast.
+        """Method to release the arm from holding its position to coast.
         This method should be called when the arm does not need to hold its vertical
         position anymore, since it is bad to the motor"""
         self.vertical_move_motor.stop_action = "coast"
         self.vertical_move_motor.stop()
+
+    def turnRight(self, speed, time=None):
+        """Method to turn the arm to the right with speed from 0 to 1.
+        If there is no given time, the arm will turn forever.
+        """
+        # In the current setting, a positive speed will make the robot turn right
+        speed = self.turning_motor.max_speed * speed
+        self.turning_motor.speed_sp = speed
+
+        # Set the arm to hold its position after turning
+        self.turning_motor.stop_action = "hold"
+
+        if time is None:
+            self.turning_motor.run_forever()
+        else:
+            self.turning_motor.run_timed(time_sp=time * 1000)
+        self.turning_motor.wait_until_not_moving()
+
+    def turnLeft(self, speed, time=None):
+        """Method to turn the arm to the left with speed from 0 to 1.
+        If there is no given time, the arm will turn forever.
+        """
+        self.turnRight(-speed, time)
+
+    def turnMotorRelease(self):
+        """Method to release the turning motor from holding"""
+        self.turning_motor.stop_action = "coast"
+        self.turning_motor.stop()
