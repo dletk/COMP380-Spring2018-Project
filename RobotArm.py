@@ -283,3 +283,7 @@ class RobotArm(object):
             if currentHeading in acceptedRange:
                 self.stopTurning()
                 break
+
+    # TODO: wait_until_not_moving is associated with each individual motor, not blocking the whole RobotArm
+    # So, the turning motor will move even when the vertical_move_motor is wait_until_not_moving
+    # Make a method to check for it 
