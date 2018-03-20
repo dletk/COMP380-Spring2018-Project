@@ -284,6 +284,18 @@ class RobotArm(object):
                 self.stopTurning()
                 break
 
+    def isTurning(self):
+        """Method to check whether the arm is turning"""
+        return self.turning_motor.is_running
+
+    def isMoving(self):
+        """Method to check whether the arm is moving on the surface"""
+        return self.surface_move_motor.is_running
+
+    def isGoingUpDown(self):
+        """Method to check whether the arm is moving up or down"""
+        return self.vertical_move_motor.is_running
+
     # TODO: wait_until_not_moving is associated with each individual motor, not blocking the whole RobotArm
     # So, the turning motor will move even when the vertical_move_motor is wait_until_not_moving
-    # Make a method to check for it 
+    # Make a method to check for it
