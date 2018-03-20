@@ -9,16 +9,17 @@ class RobotArm(object):
     # Constants for the configDict
     TURNING_MOTOR = 'turning-motor'
     VERTICAL_MOVE_MOTOR = 'vertical-move-motor'
+    SURFACE_MOVE_MOTOR = "surface-move-motor"
     HAND = 'hand'
     BOTTOM_TOUCH_SENSOR = 'bottom-touch'
-    COLOR_SENSOR = 'color-sensor'
+    ULTRASONIC_SENSOR = 'ultrasonic-sensor'
     GYRO_SENSOR = 'gyro-sensor'
     # ---------------------------------------------------------------------------
 
     # ---------------------------------------------------------------------------
     # The default config that the program will use if no config is given
-    DEFAULT_CONFIG = {COLOR_SENSOR: "in3", BOTTOM_TOUCH_SENSOR: "in2",
-                      TURNING_MOTOR: "outC", VERTICAL_MOVE_MOTOR: "outB", HAND: "outA", GYRO_SENSOR: "in1"}
+    DEFAULT_CONFIG = {ULTRASONIC_SENSOR: "in3", BOTTOM_TOUCH_SENSOR: "in2",
+                      TURNING_MOTOR: "outC", VERTICAL_MOVE_MOTOR: "outB", HAND: "outA", GYRO_SENSOR: "in1", SURFACE_MOVE_MOTOR: "outD"}
 
     # ---------------------------------------------------------------------------
 
@@ -28,9 +29,10 @@ class RobotArm(object):
         self.name = name
         self.turning_motor = None
         self.vertical_move_motor = None
+        self.surface_move_motor = None
         self.hand = None
         self.bottom_touch_sensor = None
-        self.color_sensor = None
+        self.ultrasonic_sensor = None
         self.gyro_sensor = None
 
         if configDict is not None:
@@ -48,12 +50,14 @@ class RobotArm(object):
                 self.setUpMotor(item, port)
             elif item == self.VERTICAL_MOVE_MOTOR:
                 self.setUpMotor(item, port)
+            elif item == self.SURFACE_MOVE_MOTOR:
+                self.setUpMotor(item, port)
             elif item == self.HAND:
                 self.setUpMotor(item, port)
             elif item == self.BOTTOM_TOUCH_SENSOR:
                 self.setUpTouchSensor(item, port)
-            elif item == self.COLOR_SENSOR:
-                self.setUpColorSensor(port)
+            elif item == self.ULTRASONIC_SENSOR:
+                self.setUpUltrasonicSensor(port)
             elif item == self.GYRO_SENSOR:
                 self.setUpGyroSensor(port)
             else:
@@ -65,9 +69,13 @@ class RobotArm(object):
             self.turning_motor = ev3.LargeMotor(port)
         elif motorName == self.VERTICAL_MOVE_MOTOR:
             self.vertical_move_motor = ev3.LargeMotor(port)
+        elif motorName == self.SURFACE_MOVE_MOTOR:
+            self.surface_move_motor = ev3.LargeMotor(port)
+            # The movement should hold position all the time for accurate calculation
+            self.surface_move_motor.stop_action = "hold"
         elif motorName == self.HAND:
             self.hand = ev3.MediumMotor(port)
-            self.hand.speed_sp = self.hand.max_speed
+            self.hand.speed_sp = self.hand.max_speed // 10
         else:
             print("Cannot find the motor name: ", motorName)
 
@@ -78,9 +86,10 @@ class RobotArm(object):
         else:
             print("No device found named: ", touchSensorName)
 
-    def setUpColorSensor(self, port):
-        """Set up the color sensor with given port."""
-        self.color_sensor = ev3.ColorSensor(port)
+    def setUpUltrasonicSensor(self, port):
+        """Set up the ultrasonic sensor with given port."""
+        self.ultrasonic_sensor = ev3.UltrasonicSensor(port)
+        self.ultrasonic_sensor.mode = "US-DIST-CM"
 
     def setUpGyroSensor(self, port):
         """Set up the gyro sensor with given port."""
@@ -98,6 +107,13 @@ class RobotArm(object):
             self.gyro_sensor.mode = "GYRO-ANG"
         else:
             print("Cannot find gyro sensor")
+
+    def readDistance(self):
+        """Method to read the current distance to the nearest wall in front"""
+        if self.ultrasonic_sensor is not None:
+            return self.ultrasonic_sensor.distance_centimeters
+        else:
+            print("Cannot find the ultrasonic sensor")
 
     def readHeading(self):
         """Read the heading of the robot from 0 to 359, the origin is set at the
@@ -144,6 +160,32 @@ class RobotArm(object):
         """
         self.moveUp(speed=-speed, time=time)
 
+    def forward(self, speed, time=None, wait_until_not_moving=True):
+        """Method to move the arm forward. If there is no given time, the arm will move
+        forward forever."""
+        # Calculate speed to move
+        # With the design of the robot, negative speed will make it forward
+        self.surface_move_motor.speed_sp = \
+            -(self.surface_move_motor.max_speed * speed)
+
+        if time is None:
+            self.surface_move_motor.run_forever()
+        else:
+            # Time is in seconds, so convert it to miliseconds
+            self.surface_move_motor.run_timed(time_sp=time * 1000)
+        if wait_until_not_moving:
+            self.surface_move_motor.wait_until_not_moving()
+
+    def backward(self, speed, time=None, wait_until_not_moving=True):
+        """Method to move the arm backward. If there is no given time, the arm will move
+        backward forever"""
+        self.forward(-speed, time, wait_until_not_moving)
+
+    def stopMoving(self):
+        """Method to stop the surface movement"""
+        self.surface_move_motor.stop()
+        return True
+
     def armRelease(self):
         """Method to release the arm from holding its position to coast.
         This method should be called when the arm does not need to hold its vertical
@@ -188,7 +230,7 @@ class RobotArm(object):
         """Method to wrap an object"""
         self.hand.speed_sp = -self.hand.speed_sp
         self.hand.stop_action = "hold"
-        self.hand.run_timed(time_sp=300)
+        self.hand.run_timed(time_sp=1000)
 
     def handRelease(self):
         """Method to release an object from hand"""
@@ -196,15 +238,16 @@ class RobotArm(object):
         current_sign_of_speed = 1 if abs(
             self.hand.speed_sp) == self.hand.speed_sp else -1
 
-        # Use a slow speed to release the object
-        self.hand.speed_sp = - (self.hand.speed_sp // 10)
-
         # Make sure the hand is not in hold for too long (getting hot)
         self.hand.stop_action = "coast"
+        self.hand.stop()
+
+        # Use the opposite speed to release object
+        self.hand.speed_sp = - self.hand.speed_sp
         self.hand.run_timed(time_sp=500)
 
         # Reset the speed with correct sign so handHold can work properly
-        self.hand.speed_sp = current_sign_of_speed * self.hand.max_speed
+        self.hand.speed_sp = current_sign_of_speed * self.hand.max_speed // 10
 
     def stopTurning(self):
         """Method to stop the turning_motor"""
