@@ -181,6 +181,59 @@ class RobotArm(object):
         backward forever"""
         self.forward(-speed, time, wait_until_not_moving)
 
+    def forwardExact(self, distance, speed=0.05):
+        """Method to move the arm forward with the exact distance in cm. The speed
+        of movement is optional, and should NOT be provided unless there is an absolute need."""
+        if distance <= 0:
+            print("Incorrect input for distance, distance should be larger than 0.")
+            return
+
+        current_distance_to_wall = self.readDistance()
+        target_distance = current_distance_to_wall - distance
+
+        # Begin movement
+        self.forward(speed, wait_until_not_moving=False)
+        # Check for distance
+        while True:
+            current_distance = self.readDistance()
+
+            # DEBUG: Print out current distance to debug
+            print("===> Current distance: ", current_distance)
+
+            if current_distance <= target_distance:
+                self.stopMoving()
+                return
+
+        # DEBUG: Print out information for testing
+        print("====> Final distance: ", self.readDistance())
+
+    def backwardExact(self, distance, speed=0.05):
+        """Method to move the arm backward with the exact distance in cm. The speed
+        of movement is optional and should NOT be provided unless there is there is
+        an absolute need."""
+        if distance <= 0:
+            print("Incorrect input for distance, distance should be larger than 0.")
+            return
+
+        current_distance_to_wall = self.readDistance()
+        target_distance = current_distance_to_wall + distance
+
+        # Begin movement
+        self.backward(speed, wait_until_not_moving=False)
+        # Check for distance
+        while True:
+            current_distance = self.readDistance()
+
+            # DEBUG: Print out current distance to debug
+            print("===> Current distance: ", current_distance)
+
+            if current_distance >= target_distance:
+                self.stopMoving()
+                return
+
+        # DEBUG: Print out information for testing
+        print("====> Final distance: ", self.readDistance())
+
     def stopMoving(self):
         """Method to stop the surface movement"""
         self.surface_move_motor.stop()
@@ -295,7 +348,3 @@ class RobotArm(object):
     def isGoingUpDown(self):
         """Method to check whether the arm is moving up or down"""
         return self.vertical_move_motor.is_running
-
-    # TODO: wait_until_not_moving is associated with each individual motor, not blocking the whole RobotArm
-    # So, the turning motor will move even when the vertical_move_motor is wait_until_not_moving
-    # Make a method to check for it
