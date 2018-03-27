@@ -197,15 +197,9 @@ class RobotArm(object):
         while True:
             current_distance = self.readDistance()
 
-            # DEBUG: Print out current distance to debug
-            print("===> Current distance: ", current_distance)
-
             if current_distance <= target_distance:
                 self.stopMoving()
                 return
-
-        # DEBUG: Print out information for testing
-        print("====> Final distance: ", self.readDistance())
 
     def backwardExact(self, distance, speed=0.05):
         """Method to move the arm backward with the exact distance in cm. The speed
@@ -224,15 +218,9 @@ class RobotArm(object):
         while True:
             current_distance = self.readDistance()
 
-            # DEBUG: Print out current distance to debug
-            print("===> Current distance: ", current_distance)
-
             if current_distance >= target_distance:
                 self.stopMoving()
                 return
-
-        # DEBUG: Print out information for testing
-        print("====> Final distance: ", self.readDistance())
 
     def stopMoving(self):
         """Method to stop the surface movement"""
