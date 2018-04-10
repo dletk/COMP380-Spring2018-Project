@@ -30,6 +30,14 @@ robot.moveUp(0.05, 3)
 while robot.isGoingUpDown():
     pass
 robot.turnExact(-30)
+robot.moveDown(0.05, 3)
+while robot.isGoingUpDown():
+    pass
+robot.handHold()
+robot.handRelease()
+robot.moveUp(0.05,3)
+while robot.isGoingUpDown():
+    pass
 robot.forwardExact(target_distance)
 robot.turnExact(30)
 robot.backwardExact(target_distance)

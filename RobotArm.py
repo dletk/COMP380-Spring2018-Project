@@ -19,7 +19,7 @@ class RobotArm(object):
     # ---------------------------------------------------------------------------
     # The default config that the program will use if no config is given
     DEFAULT_CONFIG = {ULTRASONIC_SENSOR: "in3", BOTTOM_TOUCH_SENSOR: "in2",
-                      TURNING_MOTOR: "outC", VERTICAL_MOVE_MOTOR: "outB", HAND: "outA", GYRO_SENSOR: "in1", SURFACE_MOVE_MOTOR: "outD"}
+                      TURNING_MOTOR: "outC", VERTICAL_MOVE_MOTOR: "outB", HAND: "outD", GYRO_SENSOR: "in4", SURFACE_MOVE_MOTOR: "outA"}
 
     # ---------------------------------------------------------------------------
 
@@ -34,6 +34,9 @@ class RobotArm(object):
         self.bottom_touch_sensor = None
         self.ultrasonic_sensor = None
         self.gyro_sensor = None
+
+        # ====== Variable to control the state of the arm
+        self.handIsHolding = False
 
         if configDict is not None:
             # Call the set up method with configDict
@@ -269,26 +272,31 @@ class RobotArm(object):
 
     def handHold(self):
         """Method to wrap an object"""
-        self.hand.speed_sp = -self.hand.speed_sp
-        self.hand.stop_action = "hold"
-        self.hand.run_timed(time_sp=1000)
+        if not self.handIsHolding:
+            self.hand.speed_sp = -self.hand.speed_sp
+            self.hand.stop_action = "hold"
+            self.hand.run_timed(time_sp=1000)
+            self.handIsHolding = True
+
 
     def handRelease(self):
         """Method to release an object from hand"""
-        # Find the current sign of speed in order to reset the speed later
-        current_sign_of_speed = 1 if abs(
-            self.hand.speed_sp) == self.hand.speed_sp else -1
+        if self.handIsHolding:
+            # Find the current sign of speed in order to reset the speed later
+            current_sign_of_speed = 1 if abs(
+                self.hand.speed_sp) == self.hand.speed_sp else -1
 
-        # Make sure the hand is not in hold for too long (getting hot)
-        self.hand.stop_action = "coast"
-        self.hand.stop()
+            # Make sure the hand is not in hold for too long (getting hot)
+            self.hand.stop_action = "coast"
+            self.hand.stop()
 
-        # Use the opposite speed to release object
-        self.hand.speed_sp = - self.hand.speed_sp
-        self.hand.run_timed(time_sp=500)
+            # Use the opposite speed to release object
+            self.hand.speed_sp = - self.hand.speed_sp
+            self.hand.run_timed(time_sp=500)
 
-        # Reset the speed with correct sign so handHold can work properly
-        self.hand.speed_sp = current_sign_of_speed * self.hand.max_speed // 10
+            # Reset the speed with correct sign so handHold can work properly
+            self.hand.speed_sp = current_sign_of_speed * self.hand.max_speed // 10
+            self.handIsHolding = False
 
     def stopTurning(self):
         """Method to stop the turning_motor"""
