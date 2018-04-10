@@ -94,22 +94,20 @@ class ChessBoardProcessor():
         numRows = 7
         colToNum = {"A": 0, "B": 1, "C": 2, "D": 3, "E": 4, "F": 5, "G": 6, "H": 7}
         # Only loop to second last row instead of last row because we need topLeft and botRight position for each square
-        for row in range(0, numRows-1):
+        for row in range(numRows - 1):
             for col in "ABCDEF":
-                # Make sure the last dot at each row does not count
-                if colToNum[col] < numCols - 1:
-                    xTopLeft = int(round(self.boardCorners[numRows * row + colToNum[col]][0][0]))
-                    yTopLeft = int(round(self.boardCorners[numRows * row + colToNum[col]][0][1]))
-                    xBotRight = int(round(self.boardCorners[(row+1) * numRows + colToNum[col] + 1][0][0]))
-                    yBotRight = int(round(self.boardCorners[(row+1) * numRows + colToNum[col] + 1][0][1]))
+                xTopLeft = int(round(self.boardCorners[numCols * row + colToNum[col]][0][0]))
+                yTopLeft = int(round(self.boardCorners[numCols * row + colToNum[col]][0][1]))
+                xBotRight = int(round(self.boardCorners[(row+1) * numCols + colToNum[col] + 1][0][0]))
+                yBotRight = int(round(self.boardCorners[(row+1) * numCols + colToNum[col] + 1][0][1]))
 
-                    # Using numpy array slicing. Because using numpy, y is in front
-                    square = self.__rawCurrentBoard[yTopLeft:yBotRight, xTopLeft:xBotRight]
-                    # Map the square to its actual position on the chessboard
+                # Using numpy array slicing. Because using numpy, y is in front
+                square = self.__rawCurrentBoard[yTopLeft:yBotRight, xTopLeft:xBotRight]
+                # Map the square to its actual position on the chessboard
 
-                    # Attention: The actual row value is numRows - row - 1, because the image is projected from
-                    # top down, so the first corner is at the top row. Also we want to number from 1, not 0
-                    squareImages[col+str(numRows - row - 1)] = square
+                # Attention: The actual row value is numRows - row - 1, because the image is projected from
+                # top down, so the first corner is at the top row. Also we want to number from 1, not 0
+                squareImages[col+str(numRows - row - 1)] = square
         return squareImages
 
     def getIndividualSquareImages(self):
