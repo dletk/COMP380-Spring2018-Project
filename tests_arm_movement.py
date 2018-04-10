@@ -35,6 +35,8 @@ while robot.isGoingUpDown():
     pass
 robot.handHold()
 robot.handRelease()
+while robot.isUsingHand():
+    pass
 robot.moveUp(0.05,3)
 while robot.isGoingUpDown():
     pass

@@ -278,6 +278,8 @@ class RobotArm(object):
             self.hand.run_timed(time_sp=1000)
             self.handIsHolding = True
 
+            # Make sure to wait_until_not_moving
+            self.hand.wait_until_not_moving()
 
     def handRelease(self):
         """Method to release an object from hand"""
@@ -297,6 +299,9 @@ class RobotArm(object):
             # Reset the speed with correct sign so handHold can work properly
             self.hand.speed_sp = current_sign_of_speed * self.hand.max_speed // 10
             self.handIsHolding = False
+
+            # Make sure to wait until not moving
+            self.hand.wait_until_not_moving()
 
     def stopTurning(self):
         """Method to stop the turning_motor"""
@@ -344,3 +349,7 @@ class RobotArm(object):
     def isGoingUpDown(self):
         """Method to check whether the arm is moving up or down"""
         return self.vertical_move_motor.is_running
+
+    def isUsingHand(self):
+        """Method to check whether the hand is being used"""
+        return self.hand.is_running

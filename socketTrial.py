@@ -12,8 +12,6 @@ class RobotArmHandler(socketserver.BaseRequestHandler):
         data = self.request.recv(4096)
         string_data = data.decode().strip()
         print(string_data)
-        # Sleep for 3 seconds before sending back
-        time.sleep(3)
         self.request.sendall(bytes("We got your data", "utf-8"))
 
 if __name__ == '__main__':
