@@ -1,7 +1,7 @@
 import cv2
 
 
-class ChessBoardProcessor():
+class ChessBoardProcessor:
     """
     Class to create a processor to process the input image from the chessboard.
     This class contains all the method to detect the chess board from video input,
