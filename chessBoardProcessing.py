@@ -50,9 +50,10 @@ class ChessBoardProcessor:
             else:
                 ret, frame = self.videoCap.read()
 
+        self.__rawCurrentBoard = frame.copy()
+
         # Detecting the chessboard can only work on a gray scale image
         gray_image = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        self.__rawCurrentBoard = gray_image.copy()
         # Detect the chessboard corner
         # This method find all the internal corners of a chessboard
         # For example, a standard 8x8 chessboard has 7x7 internal corners
@@ -116,7 +117,7 @@ class ChessBoardProcessor:
         ret, frame = self.videoCap.read()
 
         if ret:
-            self.__rawCurrentBoard = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            self.__rawCurrentBoard = frame.copy()
             return True
         else:
             return False
@@ -133,15 +134,14 @@ class ChessBoardProcessor:
             oldSquare = self.__currentSquareImages[squareCode]
             newSquare = newlyDetectedIndividualSquares[squareCode]
             # Call the method to find the difference
-            oldValue = int(oldSquare.sum())
-            newValue = int(newSquare.sum())
-
-            absDiff = abs(oldValue - newValue)
+            diff = cv2.absdiff(oldSquare, newSquare)
+            diff = diff.sum()
+            print(diff)
 
             # If the sum is different by 20000, we consider it as difference
-            if absDiff > 20000:
-                print("New Value: ", newValue)
-                print("Old value: ", oldValue)
+            if diff > 200000:
+                # print("New Value: ", newValue)
+                # print("Old value: ", oldValue)
 
                 # DEBUG:
                 cv2.imshow("Old square", oldSquare)
