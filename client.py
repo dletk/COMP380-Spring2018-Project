@@ -21,5 +21,8 @@ class ClientSideRobotArm:
 
 if __name__ == '__main__':
     client = ClientSideRobotArm()
+    client2 = ClientSideRobotArm()
     client.sendData("Do you hear me?")
+    client2.sendData("Do you hear me too?")
     print(client.receivedData)
+    print(client2.receivedData)

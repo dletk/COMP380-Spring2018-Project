@@ -20,9 +20,6 @@ class ChessBoardProcessor:
 
         # The list of individual square images. This should be private (not accessed by user)
         self.__currentSquareImages = self.__detectIndividualSquareImages()
-        # The list of newly detected square images, used to compare with the current value
-        # to detect a move
-        self.__newlyDetectedSquareImages = []
 
     def detectChessboard(self):
         """
@@ -114,15 +111,55 @@ class ChessBoardProcessor:
         """Method to get the array containing individual square images"""
         return self.__currentSquareImages
 
-    def getNewlyDetectedSquareImages(self):
-        """Method to get the array containing newly detected individual square images"""
+    def captureNewBoard(self):
+        """Method to capture new board from the video capture"""
+        ret, frame = self.videoCap.read()
+
+        if ret:
+            self.__rawCurrentBoard = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            return True
+        else:
+            return False
+
+    def detectMove(self):
+        """Method to detect a move on the board"""
+
+        # Get the current chessboard
+        self.captureNewBoard()
+        # Get the current individual squares image.
+        newlyDetectedIndividualSquares = self.__detectIndividualSquareImages()
+
+        for squareCode in newlyDetectedIndividualSquares:
+            oldSquare = self.__currentSquareImages[squareCode]
+            newSquare = newlyDetectedIndividualSquares[squareCode]
+            # Call the method to find the difference
+            oldValue = int(oldSquare.sum())
+            newValue = int(newSquare.sum())
+
+            absDiff = abs(oldValue - newValue)
+
+            # If the sum is different by 20000, we consider it as difference
+            if absDiff > 20000:
+                print("New Value: ", newValue)
+                print("Old value: ", oldValue)
+
+                # DEBUG:
+                cv2.imshow("Old square", oldSquare)
+                cv2.imshow("New square", newSquare)
+                cv2.waitKey(0)
+
+
+        # After finished finding the differences, assign the newly detected squares to be current squares
+        self.__currentSquareImages = newlyDetectedIndividualSquares
 
 if __name__ == '__main__':
-    boardPorcessor = ChessBoardProcessor()
-    print(boardPorcessor.boardCorners)
-    squares = boardPorcessor.getIndividualSquareImages()
-    print(squares)
-    for key in squares:
-        print(key)
-        cv2.imshow(key, squares[key])
-        cv2.waitKey(0)
+    boardPorcessor = ChessBoardProcessor(inputSource=1)
+    # print(boardPorcessor.boardCorners)
+    # squares = boardPorcessor.getIndividualSquareImages()
+    # print(squares)
+    # for key in squares:
+    #     print(key)
+    #     cv2.imshow(key, squares[key])
+    #     cv2.waitKey(0)
+    input("Enter to move on: ")
+    boardPorcessor.detectMove()
