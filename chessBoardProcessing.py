@@ -1,5 +1,5 @@
 import cv2
-
+import numpy as np
 
 class ChessBoardProcessor:
     """
@@ -7,6 +7,11 @@ class ChessBoardProcessor:
     This class contains all the method to detect the chess board from video input,
     detect the difference between 2 image of chessboard and infer the last move.
     """
+
+    # =========== CONSTANTS =================
+    BOARD_SIDE_LENGTH = 8
+    BOARD_SIDE_INTERNAL = BOARD_SIDE_LENGTH - 1
+    SIZE_OF_INTERNAL_CORNERS = (BOARD_SIDE_INTERNAL, BOARD_SIDE_INTERNAL)
 
     def __init__(self, inputSource=0):
         self.videoCap = cv2.VideoCapture(inputSource)
@@ -57,13 +62,20 @@ class ChessBoardProcessor:
         # Detect the chessboard corner
         # This method find all the internal corners of a chessboard
         # For example, a standard 8x8 chessboard has 7x7 internal corners
-        retVal, boardCorners = cv2.findChessboardCorners(gray_image, (7, 7), cv2.CALIB_CB_ADAPTIVE_THRESH + cv2.CALIB_CB_NORMALIZE_IMAGE
+        retVal, boardCorners = cv2.findChessboardCorners(gray_image, self.SIZE_OF_INTERNAL_CORNERS, cv2.CALIB_CB_ADAPTIVE_THRESH + cv2.CALIB_CB_NORMALIZE_IMAGE
                                                          + cv2.CALIB_CB_FAST_CHECK)
         print("======> Finished findChessboardCorners")
         if retVal:
             print("====> Chess board detected")
             boardCorners = cv2.cornerSubPix(gray_image, boardCorners, (5, 5), (-1, -1),
                                             (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.1))
+
+        # Notice: Sometimes the corners will be detected from bottom up, not top down as expected
+        # This part of the program chess for this problem and correct the order of corners
+        boardCorners = self.__constructTopDownBoardCorners(boardCorners)
+        print("=====> Shape: ", boardCorners.shape)
+
+
         # Drawout the corners detected for user to chess
         displayed_image = cv2.drawChessboardCorners(
             gray_image, (7, 7), boardCorners, retVal)
@@ -79,6 +91,34 @@ class ChessBoardProcessor:
         # the visualization to check
         self.boardCorners = boardCorners
         return displayed_image
+
+    def __constructTopDownBoardCorners(self, boardCorners):
+        """
+        Sometimes the corners will be detected from bottom up, not top down as expected
+        This method check and correct the corners of
+        """
+        print("=====> Shape: ", boardCorners.shape)
+        x_first_corner = boardCorners[0][0][0]
+        x_second_corner = boardCorners[1][0][0]
+        y_first_corner = boardCorners[0][0][1]
+        y_second_corner = boardCorners[1][0][1]
+
+        # If the board is wrongly detected bottom up, from right to left
+        if x_first_corner > x_second_corner:
+            # This means the board was detected bottom up
+            boardCorners = np.flipud(boardCorners)
+            print("=====> FLIPED bottomup")
+            return boardCorners
+        # Make sure there can be a slightly error of 30 pixels
+        elif y_first_corner < y_second_corner - 30:
+            # This means the board was detected 90 degree flip to the right.
+            newBoardCorners = []
+            for row in range(self.BOARD_SIDE_INTERNAL):
+                for i in range(self.BOARD_SIDE_INTERNAL - 1, -1, -1):
+                    newBoardCorners.append(boardCorners[i*7+row][0])
+            return np.ndarray((49,1,2), buffer=newBoardCorners)
+        else:
+            return boardCorners
 
     def __detectIndividualSquareImages(self):
         """
@@ -138,14 +178,14 @@ class ChessBoardProcessor:
             diff = diff.sum()
             print(diff)
 
-            # If the sum is different by 20000, we consider it as difference
-            if diff > 200000:
+            # If the sum is different by 1000000, we consider it as difference
+            if diff > 1000000:
                 # print("New Value: ", newValue)
                 # print("Old value: ", oldValue)
 
                 # DEBUG:
-                cv2.imshow("Old square", oldSquare)
-                cv2.imshow("New square", newSquare)
+                cv2.imshow("Old square " + squareCode, oldSquare)
+                cv2.imshow("New square " + squareCode, newSquare)
                 cv2.waitKey(0)
 
 
