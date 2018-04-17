@@ -13,6 +13,8 @@ class ChessBoardProcessor:
     BOARD_SIDE_INTERNAL = BOARD_SIDE_LENGTH - 1
     SIZE_OF_INTERNAL_CORNERS = (BOARD_SIDE_INTERNAL, BOARD_SIDE_INTERNAL)
 
+    DIFFERENCE_THRESHOLD = 500000
+
     def __init__(self, inputSource=0):
         self.videoCap = cv2.VideoCapture(inputSource)
         # The list of corners detected from the chessboard
@@ -75,7 +77,6 @@ class ChessBoardProcessor:
         boardCorners = self.__constructTopDownBoardCorners(boardCorners)
         print("=====> Shape: ", boardCorners.shape)
 
-
         # Drawout the corners detected for user to chess
         displayed_image = cv2.drawChessboardCorners(
             gray_image, (7, 7), boardCorners, retVal)
@@ -112,11 +113,13 @@ class ChessBoardProcessor:
         # Make sure there can be a slightly error of 30 pixels
         elif y_first_corner < y_second_corner - 30:
             # This means the board was detected 90 degree flip to the right.
-            newBoardCorners = []
+            newBoardCorners = [[]]
             for row in range(self.BOARD_SIDE_INTERNAL):
                 for i in range(self.BOARD_SIDE_INTERNAL - 1, -1, -1):
-                    newBoardCorners.append(boardCorners[i*7+row][0])
-            return np.ndarray((49,1,2), buffer=newBoardCorners)
+                    newBoardCorners[0].append(boardCorners[i*7+row][0])
+            print("=====> FLIPED 90 degrees")
+            newBoardCorners = np.asarray(newBoardCorners)
+            return newBoardCorners.reshape((49,1,2))
         else:
             return boardCorners
 
@@ -178,8 +181,8 @@ class ChessBoardProcessor:
             diff = diff.sum()
             print(diff)
 
-            # If the sum is different by 1000000, we consider it as difference
-            if diff > 1000000:
+            # If the sum is different by DIFFERENCE_THRESHOLD, we consider it as difference
+            if diff > self.DIFFERENCE_THRESHOLD:
                 # print("New Value: ", newValue)
                 # print("Old value: ", oldValue)
 
