@@ -12,6 +12,7 @@ class ChessBoardProcessor:
     BOARD_SIDE_LENGTH = 8
     BOARD_SIDE_INTERNAL = BOARD_SIDE_LENGTH - 1
     SIZE_OF_INTERNAL_CORNERS = (BOARD_SIDE_INTERNAL, BOARD_SIDE_INTERNAL)
+    PIECES_NAME = {"K":"King", "Q":"Queen", "R": "Rook", "B" :"Bishop", "N": "Knight", "P": "Pawn"}
 
     DIFFERENCE_THRESHOLD = 500000
 
@@ -27,6 +28,17 @@ class ChessBoardProcessor:
 
         # The list of individual square images. This should be private (not accessed by user)
         self.__currentSquareImages = self.__detectIndividualSquareImages()
+
+        # ============ Initial setup for a chess board
+        # Representation: King K, Queen Q, Rook R, Bishop B, Knight N, Pawn P
+        self.pieceAtPosition = {"A1": "R", "B1": "N", "C1": "B", "D1": "Q", "E1": "K", "F1": "B", "G1": "N", "H1": "R",
+                                "A2": "P", "B2": "P", "C2": "P", "D2": "P", "E2": "P", "F2": "P", "G2": "P", "H2": "P",
+                                "A8": "R", "B8": "N", "C8": "B", "D8": "Q", "E8": "K", "F8": "B", "G8": "N", "H8": "R",
+                                "A7": "P", "B7": "P", "C7": "P", "D7": "P", "E7": "P", "F7": "P", "G7": "P", "H7": "P",
+                                "A3": None, "B3": None, "C3": None, "D3": None, "E3": None, "F3": None, "G3": None, "H3": None,
+                                "A4": None, "B4": None, "C4": None, "D4": None, "E4": None, "F4": None, "G4": None, "H4": None,
+                                "A5": None, "B5": None, "C5": None, "D5": None, "E5": None, "F5": None, "G5": None, "H5": None,
+                                "A6": None, "B6": None, "C6": None, "D6": None, "E6": None, "F6": None, "G6": None, "H6": None}
 
     def detectChessboard(self):
         """
@@ -131,11 +143,12 @@ class ChessBoardProcessor:
         squareImages = {}
 
         # THIS IS THE NUMBER OF ROWS AND COLS OF CORNERS, NOT NUMBER OF ROWS AND COLS OF THE BOARD.
-        numCols = 7
-        numRows = 7
+        numCols = self.BOARD_SIDE_INTERNAL
+        numRows = self.BOARD_SIDE_INTERNAL
         colToNum = {"A": 0, "B": 1, "C": 2, "D": 3, "E": 4, "F": 5, "G": 6, "H": 7}
         # Only loop to second last row instead of last row because we need topLeft and botRight position for each square
         for row in range(numRows - 1):
+            # TODO: Change this to ABCDEFGH for the actual chessboard
             for col in "ABCDEF":
                 xTopLeft = int(round(self.boardCorners[numCols * row + colToNum[col]][0][0]))
                 yTopLeft = int(round(self.boardCorners[numCols * row + colToNum[col]][0][1]))
@@ -173,6 +186,9 @@ class ChessBoardProcessor:
         # Get the current individual squares image.
         newlyDetectedIndividualSquares = self.__detectIndividualSquareImages()
 
+        # There can only be 2 squares that are differences from a single move
+        squaresChanged = []
+
         for squareCode in newlyDetectedIndividualSquares:
             oldSquare = self.__currentSquareImages[squareCode]
             newSquare = newlyDetectedIndividualSquares[squareCode]
@@ -185,16 +201,32 @@ class ChessBoardProcessor:
             if diff > self.DIFFERENCE_THRESHOLD:
                 # print("New Value: ", newValue)
                 # print("Old value: ", oldValue)
-
+                squaresChanged.append(squareCode)
                 # DEBUG:
-                cv2.imshow("Old square " + squareCode, oldSquare)
-                cv2.imshow("New square " + squareCode, newSquare)
-                cv2.waitKey(0)
-
+                # cv2.imshow("Old square " + squareCode, oldSquare)
+                # cv2.imshow("New square " + squareCode, newSquare)
+                # cv2.waitKey(0)
 
         # After finished finding the differences, assign the newly detected squares to be current squares
         self.__currentSquareImages = newlyDetectedIndividualSquares
+        print(squaresChanged)
+        # Return the detected move
+        return self.__classifyAndIdentifyMove(squaresChanged)
 
+
+    def __classifyAndIdentifyMove(self, squaresChanged):
+        """Method to classify which kind of move happened on the board."""
+        # # TODO: Currently we only detect an empty move, but need to work on a capture move as well
+        currentPiece1 = self.pieceAtPosition[squaresChanged[0]]
+        currentPiece2 = self.pieceAtPosition[squaresChanged[1]]
+        if currentPiece1 is None or currentPiece2 is None:
+            # This is an empty move, just swap the value
+            self.pieceAtPosition[squaresChanged[0]] = currentPiece2
+            self.pieceAtPosition[squaresChanged[1]] = currentPiece1
+            if currentPiece1 is None:
+                return self.PIECES_NAME[currentPiece2] + " from "+ squaresChanged[1] + " move to " + squaresChanged[0]
+            else:
+                return self.PIECES_NAME[currentPiece1] + " from "+ squaresChanged[0] + " move to " + squaresChanged[1]
 if __name__ == '__main__':
     boardPorcessor = ChessBoardProcessor(inputSource=1)
     # print(boardPorcessor.boardCorners)
@@ -205,4 +237,4 @@ if __name__ == '__main__':
     #     cv2.imshow(key, squares[key])
     #     cv2.waitKey(0)
     input("Enter to move on: ")
-    boardPorcessor.detectMove()
+    print(boardPorcessor.detectMove())
