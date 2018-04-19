@@ -50,9 +50,11 @@ class ChessBoardProcessor:
         """
         Method to initiate the chessboard detection and save the newly detected chessboard
         to the processor's variable
+        ATTENTION: Use a blank chessboard for this detection to work best before put the chess pieces on
         """
         readyFlag = input(
-            "Please prepare your camera and enter d/D when you are ready: ")
+            "Please prepare your camera and enter d/D when you are ready \
+            \nAttention - Please use a blank board for best detection and put on the pieces after : ")
         while readyFlag not in "dD":
             readyFlag = input("Wrong input, please try again: ")
         self.currentBoard = self.__detect()
