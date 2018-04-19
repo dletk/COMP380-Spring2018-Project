@@ -29,12 +29,17 @@ class ChessBoardProcessor:
         # The list of individual square images. This should be private (not accessed by user)
         self.__currentSquareImages = self.__detectIndividualSquareImages()
 
+        # The variable indicate which side is currently playing, white-0 or black-1
+        self.currentPlayingSide = 0
+
         # ============ Initial setup for a chess board
         # Representation: King K, Queen Q, Rook R, Bishop B, Knight N, Pawn P
-        self.pieceAtPosition = {"A1": "R", "B1": "N", "C1": "B", "D1": "Q", "E1": "K", "F1": "B", "G1": "N", "H1": "R",
-                                "A2": "P", "B2": "P", "C2": "P", "D2": "P", "E2": "P", "F2": "P", "G2": "P", "H2": "P",
-                                "A8": "R", "B8": "N", "C8": "B", "D8": "Q", "E8": "K", "F8": "B", "G8": "N", "H8": "R",
-                                "A7": "P", "B7": "P", "C7": "P", "D7": "P", "E7": "P", "F7": "P", "G7": "P", "H7": "P",
+        # 0: white side, 1, black side
+        # K0: King of White...
+        self.pieceAtPosition = {"A1": "R0", "B1": "N0", "C1": "B0", "D1": "Q0", "E1": "K0", "F1": "B0", "G1": "N0", "H1": "R0",
+                                "A2": "P0", "B2": "P0", "C2": "P0", "D2": "P0", "E2": "P0", "F2": "P0", "G2": "P0", "H2": "P0",
+                                "A8": "R1", "B8": "N1", "C8": "B1", "D8": "Q1", "E8": "K1", "F8": "B1", "G8": "N1", "H8": "R1",
+                                "A7": "P1", "B7": "P1", "C7": "P1", "D7": "P1", "E7": "P1", "F7": "P1", "G7": "P1", "H7": "P1",
                                 "A3": None, "B3": None, "C3": None, "D3": None, "E3": None, "F3": None, "G3": None, "H3": None,
                                 "A4": None, "B4": None, "C4": None, "D4": None, "E4": None, "F4": None, "G4": None, "H4": None,
                                 "A5": None, "B5": None, "C5": None, "D5": None, "E5": None, "F5": None, "G5": None, "H5": None,
@@ -216,7 +221,6 @@ class ChessBoardProcessor:
 
     def __classifyAndIdentifyMove(self, squaresChanged):
         """Method to classify which kind of move happened on the board."""
-        # # TODO: Currently we only detect an empty move, but need to work on a capture move as well
         currentPiece1 = self.pieceAtPosition[squaresChanged[0]]
         currentPiece2 = self.pieceAtPosition[squaresChanged[1]]
         if currentPiece1 is None or currentPiece2 is None:
@@ -227,6 +231,27 @@ class ChessBoardProcessor:
                 return self.PIECES_NAME[currentPiece2] + " from "+ squaresChanged[1] + " move to " + squaresChanged[0]
             else:
                 return self.PIECES_NAME[currentPiece1] + " from "+ squaresChanged[0] + " move to " + squaresChanged[1]
+        else:
+            # This is a capture move
+            # TODO: Debug the capture move
+            # The piece is in the form TypeSide (e.g: K0). Get the side of the piece
+            currentPiece1Side = currentPiece1[1]
+            if int(currentPiece1Side) == self.currentPlayingSide:
+                # This is the turn of currentPiece1, so it is a capture from piece1 to piece2
+                # The last piece1 square become empty, and the position of piece2 is capture by piece1
+                self.pieceAtPosition[squaresChanged[0]] = None
+                self.pieceAtPosition[squaresChanged[1]] = currentPiece1
+            else:
+                # This is the turn of currentPiece2, so it is a capture from piece2 to piece1
+                self.pieceAtPosition[squaresChanged[1]] = None
+                self.pieceAtPosition[squaresChanged[0]] = currentPiece2
+
+
+
+    def changeCurrentPlayingSide(self):
+        """Method to toggle the current playing side"""
+        self.currentPlayingSide = 1 - self.currentPlayingSide
+
 if __name__ == '__main__':
     boardPorcessor = ChessBoardProcessor(inputSource=1)
     # print(boardPorcessor.boardCorners)
