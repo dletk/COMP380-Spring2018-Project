@@ -9,13 +9,15 @@ class ChessBoardProcessor:
     """
 
     # =========== CONSTANTS =================
-    # TODO: Print a 9x9 board to use as the real chessboard in order to do intensive testing.
-    BOARD_SIDE_LENGTH = 8
+    # TODO: Print a 10x10 board to use as the real chessboard in order to do intensive testing.
+    # Keep in mind, 8x8 normal board will result in 6x6 detected board
+    BOARD_SIDE_LENGTH = 10
     BOARD_SIDE_INTERNAL = BOARD_SIDE_LENGTH - 1
     SIZE_OF_INTERNAL_CORNERS = (BOARD_SIDE_INTERNAL, BOARD_SIDE_INTERNAL)
     PIECES_NAME = {"K":"King", "Q":"Queen", "R": "Rook", "B" :"Bishop", "N": "Knight", "P": "Pawn"}
 
-    DIFFERENCE_THRESHOLD = 500000
+    # TODO: CHANGE THE THRESHOLD EVERYTIME SETTING UP THE GAME
+    DIFFERENCE_THRESHOLD = 150000
 
     def __init__(self, inputSource=0):
         self.videoCap = cv2.VideoCapture(inputSource)
@@ -99,7 +101,7 @@ class ChessBoardProcessor:
 
         # Drawout the corners detected for user to chess
         displayed_image = cv2.drawChessboardCorners(
-            gray_image, (7, 7), boardCorners, retVal)
+            gray_image, self.SIZE_OF_INTERNAL_CORNERS, boardCorners, retVal)
 
         # Draw a line between first 2 corners to know where the corners begin
         displayed_image = cv2.line(displayed_image, (boardCorners[0][0][0], boardCorners[0][0][1]), (
@@ -136,10 +138,10 @@ class ChessBoardProcessor:
             newBoardCorners = [[]]
             for row in range(self.BOARD_SIDE_INTERNAL):
                 for i in range(self.BOARD_SIDE_INTERNAL - 1, -1, -1):
-                    newBoardCorners[0].append(boardCorners[i*7+row][0])
+                    newBoardCorners[0].append(boardCorners[i*self.BOARD_SIDE_INTERNAL+row][0])
             print("=====> FLIPED 90 degrees")
             newBoardCorners = np.asarray(newBoardCorners)
-            return newBoardCorners.reshape((49,1,2))
+            return newBoardCorners.reshape((self.BOARD_SIDE_INTERNAL ,1,2))
         else:
             return boardCorners
 
@@ -230,32 +232,40 @@ class ChessBoardProcessor:
 
     def __classifyAndIdentifyMove(self, squaresChanged):
         """Method to classify which kind of move happened on the board."""
+        # DEBUG:
         currentPiece1 = self.pieceAtPosition[squaresChanged[0]]
         currentPiece2 = self.pieceAtPosition[squaresChanged[1]]
+
         if currentPiece1 is None or currentPiece2 is None:
             # This is an empty move, just swap the value
             self.pieceAtPosition[squaresChanged[0]] = currentPiece2
             self.pieceAtPosition[squaresChanged[1]] = currentPiece1
             if currentPiece1 is None:
-                return self.PIECES_NAME[currentPiece2] + " from "+ squaresChanged[1] + " move to " + squaresChanged[0]
+                return currentPiece2 + " from "+ squaresChanged[1] + " move to " + squaresChanged[0]
             else:
-                return self.PIECES_NAME[currentPiece1] + " from "+ squaresChanged[0] + " move to " + squaresChanged[1]
+                return currentPiece1 + " from "+ squaresChanged[0] + " move to " + squaresChanged[1]
         else:
             # This is a capture move
             # TODO: Debug the capture move
             # The piece is in the form TypeSide (e.g: K0). Get the side of the piece
+            # print(currentPiece1)
+            # for char in currentPiece1:
+            #     print(char)
+            currentPiece1 = currentPiece1.strip()
+            currentPiece2 = currentPiece2.strip()
+
             currentPiece1Side = currentPiece1[1]
             if int(currentPiece1Side) == self.currentPlayingSide:
                 # This is the turn of currentPiece1, so it is a capture from piece1 to piece2
                 # The last piece1 square become empty, and the position of piece2 is capture by piece1
                 self.pieceAtPosition[squaresChanged[0]] = None
                 self.pieceAtPosition[squaresChanged[1]] = currentPiece1
-                return "Capture of" + currentPiece1Side
+                return "Capture of" + currentPiece1Side + " " + currentPiece1 + " capture " + currentPiece2
             else:
                 # This is the turn of currentPiece2, so it is a capture from piece2 to piece1
                 self.pieceAtPosition[squaresChanged[1]] = None
                 self.pieceAtPosition[squaresChanged[0]] = currentPiece2
-                return "Capture of" + self.currentPlayingSide
+                return "Capture of" + str(self.currentPlayingSide) + " " + currentPiece2 + " capture " + currentPiece1
 
     def setCurrentSquareImages(self):
         """Method to set the current square images to the current board setting"""
@@ -266,7 +276,7 @@ class ChessBoardProcessor:
         self.currentPlayingSide = 1 - self.currentPlayingSide
 
 if __name__ == '__main__':
-    boardPorcessor = ChessBoardProcessor(inputSource=1)
+    boardPorcessor = ChessBoardProcessor(inputSource=0)
     # print(boardPorcessor.boardCorners)
     # squares = boardPorcessor.getIndividualSquareImages()
     # print(squares)
@@ -281,3 +291,4 @@ if __name__ == '__main__':
         # DEBUG: Work on multiple moves
         input("Enter to move on: ")
         print(boardPorcessor.detectMove())
+        boardPorcessor.changeCurrentPlayingSide()
