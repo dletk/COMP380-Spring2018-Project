@@ -9,6 +9,7 @@ class ChessBoardProcessor:
     """
 
     # =========== CONSTANTS =================
+    # TODO: Print a 9x9 board to use as the real chessboard in order to do intensive testing.
     BOARD_SIDE_LENGTH = 8
     BOARD_SIDE_INTERNAL = BOARD_SIDE_LENGTH - 1
     SIZE_OF_INTERNAL_CORNERS = (BOARD_SIDE_INTERNAL, BOARD_SIDE_INTERNAL)
@@ -179,6 +180,9 @@ class ChessBoardProcessor:
 
         if ret:
             self.__rawCurrentBoard = frame.copy()
+            # DEBUG: Comment out this part for debug purpose
+            # cv2.imshow("Current board", self.__rawCurrentBoard)
+            # cv2.waitKey(0)
             return True
         else:
             return False
@@ -207,14 +211,17 @@ class ChessBoardProcessor:
                 # print("New Value: ", newValue)
                 # print("Old value: ", oldValue)
                 squaresChanged.append(squareCode)
-                # DEBUG:
+                # DEBUG: Use to see the image of detected changed squares
                 # cv2.imshow("Old square " + squareCode, oldSquare)
                 # cv2.imshow("New square " + squareCode, newSquare)
                 # cv2.waitKey(0)
 
+        # DEBUG: Print out the list of squares changed
+        print(squaresChanged)
+
         # After finished finding the differences, assign the newly detected squares to be current squares
         self.__currentSquareImages = newlyDetectedIndividualSquares
-        print(squaresChanged)
+
         # Return the detected move
         return self.__classifyAndIdentifyMove(squaresChanged)
 
@@ -241,12 +248,16 @@ class ChessBoardProcessor:
                 # The last piece1 square become empty, and the position of piece2 is capture by piece1
                 self.pieceAtPosition[squaresChanged[0]] = None
                 self.pieceAtPosition[squaresChanged[1]] = currentPiece1
+                return "Capture of" + currentPiece1Side
             else:
                 # This is the turn of currentPiece2, so it is a capture from piece2 to piece1
                 self.pieceAtPosition[squaresChanged[1]] = None
                 self.pieceAtPosition[squaresChanged[0]] = currentPiece2
+                return "Capture of" + self.currentPlayingSide
 
-
+    def setCurrentSquareImages(self):
+        """Method to set the current square images to the current board setting"""
+        self.__currentSquareImages = self.__detectIndividualSquareImages()
 
     def changeCurrentPlayingSide(self):
         """Method to toggle the current playing side"""
@@ -261,5 +272,10 @@ if __name__ == '__main__':
     #     print(key)
     #     cv2.imshow(key, squares[key])
     #     cv2.waitKey(0)
-    input("Enter to move on: ")
-    print(boardPorcessor.detectMove())
+    input("Enter to begin: ")
+    boardPorcessor.captureNewBoard()
+    boardPorcessor.setCurrentSquareImages()
+    while True:
+        # DEBUG: Work on multiple moves
+        input("Enter to move on: ")
+        print(boardPorcessor.detectMove())
