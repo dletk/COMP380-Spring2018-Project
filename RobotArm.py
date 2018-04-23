@@ -37,6 +37,8 @@ class RobotArm(object):
 
         # ====== Variable to control the state of the arm
         self.handIsHolding = False
+        self.pickingUpMode = False
+
 
         if configDict is not None:
             # Call the set up method with configDict
@@ -236,6 +238,16 @@ class RobotArm(object):
         position anymore, since it is bad to the motor"""
         self.vertical_move_motor.stop_action = "coast"
         self.vertical_move_motor.stop()
+        self.pickingUpMode = False
+
+    def armToStraightPosition(self):
+        """
+        Method to move the arm to the straight position to prepare for picking up
+        Notice: Only call after armRelease and the hand is rested on surface.
+        """
+        self.moveUp(0.05, 5)
+        self.pickingUpMode = True
+
 
     def turnRight(self, speed, time=None, wait_until_not_moving=True):
         """Method to turn the arm to the right with speed from 0 to 1.
@@ -337,6 +349,40 @@ class RobotArm(object):
             if currentHeading in acceptedRange:
                 self.stopTurning()
                 break
+
+    def pickUp(self):
+        """Method to pick up an object"""
+        if not self.pickingUpMode:
+            # If the robot is not in the ready state for picking up object, prepare for it
+            # Move the robot to the position
+            self.armToStraightPosition()
+            print("Ready to conduct pickUp")
+        # Ready to do the pick up work
+        self.moveDown(0.05, 2.1)
+
+        while self.isGoingUpDown():
+            pass
+        self.handHold()
+
+        while self.isUsingHand():
+            pass
+
+        self.moveUp(0.05, 2.3)
+
+    def dropDown(self):
+        """Method to drop an object"""
+        if self.pickingUpMode:
+            # Only work when the robot is in picking mode
+            self.moveDown(0.05, 2.1)
+
+            while self.isGoingUpDown():
+                pass
+            self.handRelease()
+
+            while self.isUsingHand():
+                pass
+
+            self.moveUp(0.05, 2.3)
 
     def isTurning(self):
         """Method to check whether the arm is turning"""

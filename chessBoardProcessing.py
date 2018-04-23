@@ -208,7 +208,7 @@ class ChessBoardProcessor:
             # Call the method to find the difference
             diff = cv2.absdiff(oldSquare, newSquare)
             diff = diff.sum()
-            print(diff)
+            # print(diff)
 
             # If the sum is different by DIFFERENCE_THRESHOLD, we consider it as difference
             if diff > self.DIFFERENCE_THRESHOLD:
