@@ -17,7 +17,7 @@ class ChessBoardProcessor:
     PIECES_NAME = {"K":"King", "Q":"Queen", "R": "Rook", "B" :"Bishop", "N": "Knight", "P": "Pawn"}
 
     # TODO: CHANGE THE THRESHOLD EVERYTIME SETTING UP THE GAME
-    DIFFERENCE_THRESHOLD = 150000
+    DIFFERENCE_THRESHOLD = 500000
 
     def __init__(self, inputSource=0):
         self.videoCap = cv2.VideoCapture(inputSource)
@@ -141,7 +141,7 @@ class ChessBoardProcessor:
                     newBoardCorners[0].append(boardCorners[i*self.BOARD_SIDE_INTERNAL+row][0])
             print("=====> FLIPED 90 degrees")
             newBoardCorners = np.asarray(newBoardCorners)
-            return newBoardCorners.reshape((self.BOARD_SIDE_INTERNAL ,1,2))
+            return newBoardCorners.reshape((self.BOARD_SIDE_INTERNAL * self.BOARD_SIDE_INTERNAL,1,2))
         else:
             return boardCorners
 
@@ -159,7 +159,7 @@ class ChessBoardProcessor:
         # Only loop to second last row instead of last row because we need topLeft and botRight position for each square
         for row in range(numRows - 1):
             # TODO: Change this to ABCDEFGH for the actual chessboard
-            for col in "ABCDEF":
+            for col in "ABCDEFGH":
                 xTopLeft = int(round(self.boardCorners[numCols * row + colToNum[col]][0][0]))
                 yTopLeft = int(round(self.boardCorners[numCols * row + colToNum[col]][0][1]))
                 xBotRight = int(round(self.boardCorners[(row+1) * numCols + colToNum[col] + 1][0][0]))
@@ -208,7 +208,7 @@ class ChessBoardProcessor:
             # Call the method to find the difference
             diff = cv2.absdiff(oldSquare, newSquare)
             diff = diff.sum()
-            # print(diff)
+            print(diff)
 
             # If the sum is different by DIFFERENCE_THRESHOLD, we consider it as difference
             if diff > self.DIFFERENCE_THRESHOLD:

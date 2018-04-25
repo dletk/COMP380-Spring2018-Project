@@ -9,9 +9,9 @@ robot.turnMotorRelease()
 in_command = input("Enter Y when ready: ")
 
 if in_command.lower() == "y":
-    robot.moveUp(0.05, 4)
+    robot.pickUp()
     while robot.isGoingUpDown():
         pass
-    time.sleep(1)
-    robot.turnExact(-90)
-    robot.moveDown(0.05, 2)
+
+    robot.turnExact(60)
+    robot.dropDown()
