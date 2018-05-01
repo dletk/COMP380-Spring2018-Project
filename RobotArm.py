@@ -23,7 +23,7 @@ class RobotArm(object):
 
     # ---------------------------------------------------------------------------
 
-    def __init__(self, name, configDict=DEFAULT_CONFIG):
+    def __init__(self, name="Duc", configDict=DEFAULT_CONFIG):
         """Take the configuration and set up the robot arm."""
         super(RobotArm, self).__init__()
         self.name = name
