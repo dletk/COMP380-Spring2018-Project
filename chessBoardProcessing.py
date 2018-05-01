@@ -17,7 +17,9 @@ class ChessBoardProcessor:
     PIECES_NAME = {"K":"King", "Q":"Queen", "R": "Rook", "B" :"Bishop", "N": "Knight", "P": "Pawn"}
 
     # TODO: CHANGE THE THRESHOLD EVERYTIME SETTING UP THE GAME
-    DIFFERENCE_THRESHOLD = 500000
+    DIFFERENCE_THRESHOLD = 200000
+    # The amount is in centimeters
+    CHESSBOARD_SQUARE_LENGTH = 5
 
     def __init__(self, inputSource=0):
         self.videoCap = cv2.VideoCapture(inputSource)
@@ -276,7 +278,7 @@ class ChessBoardProcessor:
         self.currentPlayingSide = 1 - self.currentPlayingSide
 
 if __name__ == '__main__':
-    boardPorcessor = ChessBoardProcessor(inputSource=0)
+    boardPorcessor = ChessBoardProcessor(inputSource=1)
     # print(boardPorcessor.boardCorners)
     # squares = boardPorcessor.getIndividualSquareImages()
     # print(squares)

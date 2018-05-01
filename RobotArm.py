@@ -39,7 +39,6 @@ class RobotArm(object):
         self.handIsHolding = False
         self.pickingUpMode = False
 
-
         if configDict is not None:
             # Call the set up method with configDict
             self.setUpMotorsSensors(configDict)
@@ -119,6 +118,13 @@ class RobotArm(object):
             return self.ultrasonic_sensor.distance_centimeters
         else:
             print("Cannot find the ultrasonic sensor")
+
+    def readTouch(self):
+        """Method to read the current value of the touch sensor"""
+        if self.bottom_touch_sensor is not None:
+            return self.bottom_touch_sensor.value()
+        else:
+            print("Cannot find the touch sensor")
 
     def readHeading(self):
         """Read the heading of the robot from 0 to 359, the origin is set at the
@@ -245,12 +251,12 @@ class RobotArm(object):
         Method to move the arm to the straight position to prepare for picking up
         Notice: Only call after armRelease and the hand is rested on surface.
         """
-        self.moveUp(0.05, 5)
+        self.moveUp(0.05, 4.5)
         self.pickingUpMode = True
 
-
     def turnRight(self, speed, time=None, wait_until_not_moving=True):
-        """Method to turn the arm to the right with speed from 0 to 1.
+        """
+        Method to turn the arm to the right with speed from 0 to 1.
         If there is no given time, the arm will turn forever.
         wait_until_not_moving will make sure the robot stop before doing the next command, set this
         to False if needed to do some checking while turning
@@ -320,7 +326,7 @@ class RobotArm(object):
         self.turning_motor.stop()
         return True
 
-    def turnExact(self, angle, speed=0.02):
+    def turnExact(self, angle, speed=0.05):
         """Method to turn the arm to left or right with the exact angle
         If the angle value is positive, turn to the right.
         If the angle value is negative, tur to the left.
@@ -350,6 +356,14 @@ class RobotArm(object):
                 self.stopTurning()
                 break
 
+    def turnToStartPosition(self):
+        """Method to turn the arm to the starting position (until touch the Touch sensor)"""
+        self.turnRight(0.05, time=None, wait_until_not_moving=False)
+        while not self.readTouch():
+            pass
+        self.turning_motor.stop()
+
+
     def pickUp(self):
         """Method to pick up an object"""
         if not self.pickingUpMode:
@@ -358,7 +372,7 @@ class RobotArm(object):
             self.armToStraightPosition()
             print("Ready to conduct pickUp")
         # Ready to do the pick up work
-        self.moveDown(0.05, 2.1)
+        self.moveDown(0.05, 1.8)
 
         while self.isGoingUpDown():
             pass
@@ -367,13 +381,13 @@ class RobotArm(object):
         while self.isUsingHand():
             pass
 
-        self.moveUp(0.05, 2.3)
+        self.moveUp(0.05, 2)
 
     def dropDown(self):
         """Method to drop an object"""
         if self.pickingUpMode:
             # Only work when the robot is in picking mode
-            self.moveDown(0.05, 2.1)
+            self.moveDown(0.05, 1.8)
 
             while self.isGoingUpDown():
                 pass
@@ -382,7 +396,7 @@ class RobotArm(object):
             while self.isUsingHand():
                 pass
 
-            self.moveUp(0.05, 2.3)
+            self.moveUp(0.05, 2)
 
     def isTurning(self):
         """Method to check whether the arm is turning"""
