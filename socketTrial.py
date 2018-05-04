@@ -63,7 +63,7 @@ class RobotArmHandler(socketserver.BaseRequestHandler):
         # NOTE: Here, because we measture the angles continuously, after the arm moving to the first
         # row, row1 and col1, when it turn back that much degree, it has already gone a distance called traveledDistance,
         # This distance should made it not start from row1, but from the initialRow of col2 + traveledDistance
-        traveledDistance += self.moveArmToRow(initialRowAndIncorrect2[0], row2, abs(traveledDistance), incorrect=initialRowAndIncorrect2[1])
+        traveledDistance += self.moveArmToRow(initialRowAndIncorrect2[0], row2, -(traveledDistance), incorrect=initialRowAndIncorrect2[1])
 
         # Move the robot from row1 to row2, adjustment will be the difference between them
         # traveledDistance += self.moveArmToRow(row1, row2, initialRowAndIncorrect1[1] - initialRowAndIncorrect2[1])
@@ -94,22 +94,19 @@ class RobotArmHandler(socketserver.BaseRequestHandler):
 
         forwarded = True
 
-        if currentRow < row:
+        if distanceToRow < 0:
             # TODO: WRONG LOGIC, SHOULD GO backward
             # If the currentRow has the value smaller than row, go backward to reach to row
-            robot.backwardExact(distanceToRow)
+            robot.backwardExact(abs(distanceToRow))
             forwarded = False
-        elif currentRow > row:
+        else:
             # If the current row has the value larger than row, go forward to reach to row
             robot.forwardExact(distanceToRow)
-        else:
-            # If the current row is the same with new row, adjust the incorrect by go forward to correct
-            robot.forwardExact(distanceToRow)
+        # else:
+        #     # If the current row is the same with new row, adjust the incorrect by go forward to correct
+        #     robot.forwardExact(distanceToRow)
 
-        if forwarded:
-            return distanceToRow
-        else:
-            return -distanceToRow
+        return distanceToRow
 
     def pickOrDropPiece(self, pickUp=True):
         """Method to pick up or drop down a piece"""

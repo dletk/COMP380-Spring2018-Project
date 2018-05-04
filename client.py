@@ -21,5 +21,5 @@ class ClientSideRobotArm:
 
 if __name__ == '__main__':
     client = ClientSideRobotArm()
-    client.sendData("E6-A5")
+    client.sendData("B3-G6")
     print(client.receivedData)
