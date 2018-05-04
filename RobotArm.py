@@ -251,7 +251,7 @@ class RobotArm(object):
         Method to move the arm to the straight position to prepare for picking up
         Notice: Only call after armRelease and the hand is rested on surface.
         """
-        self.moveUp(0.05, 4.5)
+        self.moveUp(0.05, 5)
         self.pickingUpMode = True
 
     def turnRight(self, speed, time=None, wait_until_not_moving=True):
@@ -382,6 +382,8 @@ class RobotArm(object):
             pass
 
         self.moveUp(0.05, 2)
+        while self.isGoingUpDown():
+            pass
 
     def dropDown(self):
         """Method to drop an object"""
@@ -397,6 +399,8 @@ class RobotArm(object):
                 pass
 
             self.moveUp(0.05, 2)
+            while self.isGoingUpDown():
+                pass
 
     def isTurning(self):
         """Method to check whether the arm is turning"""

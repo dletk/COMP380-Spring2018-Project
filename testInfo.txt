@@ -1,0 +1,8 @@
+Turning degree for each col:
+
+
+With D: -85, the arm will be right on top of row 6
+{"A": -43, "B": -60, "C": -70 "D": -85, "E": -97, "F": -110, "G": -125, "H": -140}
+
+Relative position (row, deltaCorrection in cm)
+{"A": (7, 0), "B": (6, 1.5), "C": (6, 0), "D": (6, 0), "E": (6, 0), "F": (6, 2), "G": (7, 0), "H": (8, 0)}
