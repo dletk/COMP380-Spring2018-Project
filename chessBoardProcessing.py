@@ -210,7 +210,8 @@ class ChessBoardProcessor:
             # Call the method to find the difference
             diff = cv2.absdiff(oldSquare, newSquare)
             diff = diff.sum()
-            print(diff)
+            # DEBUG: Comment out to see the difference of all pixels
+            # print(diff)
 
             # If the sum is different by DIFFERENCE_THRESHOLD, we consider it as difference
             if diff > self.DIFFERENCE_THRESHOLD:
@@ -278,7 +279,7 @@ class ChessBoardProcessor:
         self.currentPlayingSide = 1 - self.currentPlayingSide
 
 if __name__ == '__main__':
-    boardPorcessor = ChessBoardProcessor(inputSource=1)
+    boardPorcessor = ChessBoardProcessor(inputSource=0)
     # print(boardPorcessor.boardCorners)
     # squares = boardPorcessor.getIndividualSquareImages()
     # print(squares)

@@ -5,7 +5,7 @@ import time
 
 class ClientSideRobotArm:
     def __init__(self):
-        self.HOST, self.PORT  = "169.254.237.72", 9999
+        self.HOST, self.PORT  = "169.254.213.45", 9999
         self.receivedData = ""
 
         # Established the sokcet object
@@ -21,5 +21,5 @@ class ClientSideRobotArm:
 
 if __name__ == '__main__':
     client = ClientSideRobotArm()
-    client.sendData("B3-G6")
+    client.sendData("A7-A6")
     print(client.receivedData)

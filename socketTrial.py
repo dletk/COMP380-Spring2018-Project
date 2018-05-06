@@ -31,8 +31,8 @@ class RobotArmHandler(socketserver.BaseRequestHandler):
     def movePiece(self, pos1, pos2):
         """Method to move a piece from pos1 to pos2"""
 
-        initialRow = {"A": (7, 0), "B": (6, 3), "C": (6, 0), "D": (
-            6, 0), "E": (6, 0), "F": (6, 2), "G": (7, 0), "H": (8, 0)}
+        initialRow = {"A": (7, 0), "B": (6, 0), "C": (6, 0), "D": (
+            6, 0), "E": (6, 0), "F": (6, 2), "G": (7, -1), "H": (8, 0)}
         turningAngle = {"A": -43, "B": -60, "C": -70, "D": -85, "E": -97, "F": -110, "G": -125, "H": -140}
 
         # Find the column of the positions
@@ -72,13 +72,15 @@ class RobotArmHandler(socketserver.BaseRequestHandler):
         # Drop the object
         self.pickOrDropPiece(pickUp=False)
 
+        # Reset the arm
+        robot.turnToStartPosition()
+
         # Move back to the original position
         if traveledDistance > 0:
             robot.backwardExact(traveledDistance)
         else:
             robot.forwardExact(abs(traveledDistance))
-        # Reset the arm
-        robot.turnToStartPosition()
+
         robot.armRelease()
         time.sleep(2)
         robot.armToStraightPosition()
@@ -126,6 +128,9 @@ if __name__ == '__main__':
     CHESSBOARD_SQUARE_LENGTH = 5
 
     robot = RobotArm()
+
+    robot.armToStraightPosition()
+    robot.turnExact(-5)
 
     server = socketserver.TCPServer(
         (socket.gethostname(), PORT), RobotArmHandler)

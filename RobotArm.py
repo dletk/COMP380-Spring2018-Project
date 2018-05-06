@@ -115,7 +115,22 @@ class RobotArm(object):
     def readDistance(self):
         """Method to read the current distance to the nearest wall in front"""
         if self.ultrasonic_sensor is not None:
-            return self.ultrasonic_sensor.distance_centimeters
+            distances = {}
+            for i in range(11):
+                distance = self.ultrasonic_sensor.distance_centimeters
+                if distance not in distances:
+                    distances[distance] = 1
+                else:
+                    distances[distance] += 1
+
+            max = -1
+            returnValue = 0
+            for dist in distances:
+                if max < distances[dist]:
+                    max = distances[dist]
+                    returnValue = dist
+
+            return returnValue
         else:
             print("Cannot find the ultrasonic sensor")
 
@@ -202,12 +217,15 @@ class RobotArm(object):
         current_distance_to_wall = self.readDistance()
         target_distance = current_distance_to_wall - distance
 
+        # DEBUG: Comment out when done
+        print("Current distance: ", current_distance_to_wall)
+        print("Target distace: ", target_distance)
+
         # Begin movement
         self.forward(speed, wait_until_not_moving=False)
         # Check for distance
         while True:
             current_distance = self.readDistance()
-
             if current_distance <= target_distance:
                 self.stopMoving()
                 return
@@ -222,6 +240,10 @@ class RobotArm(object):
 
         current_distance_to_wall = self.readDistance()
         target_distance = current_distance_to_wall + distance
+
+        # DEBUG: Comment out when done
+        print("Current distance: ", current_distance_to_wall)
+        print("Target distace: ", target_distance)
 
         # Begin movement
         self.backward(speed, wait_until_not_moving=False)
